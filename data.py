@@ -5,6 +5,11 @@ from pyspark.sql.functions import regexp_replace
 from pyspark.sql.functions import col
 from pyspark.sql.types import StringType, StructType, StructField, IntegerType
 from key import get_env_variable
+import os
+import glob
+import pandas as pd
+from datetime import datetime
+import shutil
 
 
 KEY = get_env_variable()
@@ -29,15 +34,6 @@ spark = SparkSession.builder.master('local[*]').getOrCreate()
 sc = SparkContext.getOrCreate()
 
 
-# def clean(line):
-#     try:
-#         if line['state']:
-#             if line['state'] != "":
-#                 return line
-#     except:
-#         pass
-
-
 def get_rdd():
     rdd = sc.parallelize(api_response)
     return rdd
@@ -56,6 +52,32 @@ def create_and_clean_df(rdd):
 data=create_and_clean_df(get_rdd())
 df1 = data.createOrReplaceTempView("tableA")
 
+
+
+def csv_file():
+    dt = datetime.now()
+    data.write.format("csv").option("header", "true").save(fr"/Users/mohangundluri/Desktop/pyspark_data_{dt}.csv")
+    # set the directory where the csv files are saved
+    csv_dir = fr"/Users/mohangundluri/Desktop/pyspark_data_{dt}.csv"
+
+    # read all the csv files into a list
+    csv_files = glob.glob(os.path.join(csv_dir, "*.csv"))
+
+    # create an empty list to store the DataFrames
+    dfs = []
+
+    # append each DataFrame to the list
+    for csv in csv_files:
+        df = pd.read_csv(csv)
+        dfs.append(df)
+
+    # concatenate all the DataFrames into a single DataFrame
+    combined_df = pd.concat(dfs)
+
+    # write the combined DataFrame to a new csv file
+    combined_df.to_csv(fr"/Users/mohangundluri/Desktop/files/combined_results_{dt}.csv", index=False)
+    shutil.rmtree(fr"/Users/mohangundluri/Desktop/pyspark_data_{dt}.csv")
+    return fr"/Users/mohangundluri/Desktop/files/combined_results_{dt}.csv"
 
 
 sql_query1 = """

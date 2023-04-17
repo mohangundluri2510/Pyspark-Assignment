@@ -1,6 +1,6 @@
-from data import ans
+from data import ans, csv_file
 from flask import Flask, jsonify, render_template
-
+from flask import send_file
 app = Flask(__name__)
 
 
@@ -45,6 +45,17 @@ def get_least_efficient_state():
     return jsonify({'least efficient_state': ans[6]})
 
 
+@app.route("/getcsv")
+def getcsvfile():
+    file_path = csv_file()
+    return render_template('csv.html', file_path =file_path)
+
+
+@app.route("/download-data-file")
+def download():
+    file_path = csv_file()
+    return send_file(file_path, as_attachment=True)
+
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
-
