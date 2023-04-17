@@ -47,6 +47,7 @@ def create_and_clean_df(rdd):
         withColumn("state", regexp_replace("state", "\*", "")).\
         drop("_corrupt_record").\
         filter(df["state"] != "")
+    df = df.select('slno', 'state', 'confirm', 'cured', 'death', 'total')
     return df
 
 data=create_and_clean_df(get_rdd())
