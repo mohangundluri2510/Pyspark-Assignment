@@ -1,3 +1,4 @@
+#Imported required libraries
 import requests
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
@@ -11,10 +12,10 @@ import pandas as pd
 from datetime import datetime
 import shutil
 
-
+#Get the key
 KEY = get_env_variable()
 
-
+# geting data from the api using requests library
 def get_data():
     covid_details_api_url = "https://covid-19-india2.p.rapidapi.com/details.php"
 
@@ -29,17 +30,17 @@ def get_data():
 
 api_response = get_data().json().values()
 
-
+#Creating spark sesion and spark context
 spark = SparkSession.builder.master('local[*]').getOrCreate()
 sc = SparkContext.getOrCreate()
 
-
+#Creating rdd from the api data
 def get_rdd():
     rdd = sc.parallelize(api_response)
     return rdd
 
 
-
+#Creating and claning the the dataframe 
 def create_and_clean_df(rdd):
     df = spark.read.json(rdd)
     df = df.withColumn("confirm", col("confirm").cast(IntegerType())).\
@@ -50,6 +51,7 @@ def create_and_clean_df(rdd):
     df = df.select('slno', 'state', 'confirm', 'cured', 'death', 'total')
     return df
 
+#Getting the dataframe 
 data=create_and_clean_df(get_rdd())
 df1 = data.createOrReplaceTempView("tableA")
 
